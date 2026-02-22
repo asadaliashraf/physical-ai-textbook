@@ -1,0 +1,157 @@
+.container {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f0f9ff, #faf5ff);
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.featureBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 2rem;
+  border: 2px solid #2563eb;
+  background: white;
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.featureBtn:hover:not(:disabled) {
+  background: #2563eb;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.featureBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.featureBtn.active {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: white;
+  border-color: transparent;
+}
+
+.featureBtn.activeGreen {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: white;
+  border-color: transparent;
+}
+
+.btnIcon {
+  font-size: 1.1rem;
+  font-family: 'Noto Nastaliq Urdu', serif;
+}
+
+/* Spinner */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error Banner */
+.errorBanner {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 0.5rem;
+  color: #991b1b;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dismissBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 1rem;
+}
+
+/* Translated Content */
+.translatedContent {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.personalizedContent {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+.contentHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+
+.translatedText {
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', serif;
+  font-size: 1.1rem;
+  line-height: 2;
+  color: #1f2937;
+}
+
+.personalizedText {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #1f2937;
+}
+
+@media (max-width: 576px) {
+  .buttonRow {
+    flex-direction: column;
+  }
+
+  .featureBtn {
+    justify-content: center;
+  }
+}

@@ -1,0 +1,261 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: white;
+  border-radius: 1.5rem;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  padding: 2rem;
+  text-align: center;
+  color: white;
+  position: relative;
+  border-radius: 1.5rem 1.5rem 0 0;
+}
+
+.logo {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: white;
+  background: none;
+  -webkit-text-fill-color: white;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  margin: 0;
+  color: rgba(255,255,255,0.9);
+}
+
+.closeBtn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.closeBtn:hover { background: rgba(255,255,255,0.3); }
+
+/* Steps indicator */
+.steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.step {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #9ca3af;
+  transition: color 0.2s;
+}
+
+.step.stepActive { color: #2563eb; }
+
+.stepLine {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  margin: 0 0.75rem;
+  max-width: 60px;
+}
+
+/* Form */
+.form {
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.field input,
+.field select {
+  padding: 0.6rem 0.9rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.6rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s;
+  background: #f9fafb;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: #2563eb;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Background info box */
+.backgroundInfo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #eff6ff, #f3e8ff);
+  border-radius: 0.6rem;
+  border: 1px solid #c7d2fe;
+}
+
+.backgroundInfo p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+/* Error */
+.error {
+  padding: 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 0.5rem;
+  color: #991b1b;
+  font-size: 0.875rem;
+}
+
+/* Submit button */
+.submitBtn {
+  padding: 0.85rem;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: inherit;
+}
+
+.submitBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+}
+
+.submitBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.backBtn {
+  padding: 0.65rem;
+  background: transparent;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.75rem;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.backBtn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.btnSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toggle */
+.toggle {
+  text-align: center;
+  padding: 1rem 2rem 1.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  border-top: 1px solid #f3f4f6;
+}
+
+.toggle button {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.875rem;
+  text-decoration: underline;
+}
+
+.toggle button:hover { color: #7c3aed; }
+
+@media (max-width: 480px) {
+  .modal { border-radius: 1rem; }
+  .header { border-radius: 1rem 1rem 0 0; }
+  .form { padding: 1.25rem 1.25rem; }
+}
