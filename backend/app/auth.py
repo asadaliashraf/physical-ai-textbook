@@ -6,6 +6,7 @@ from fastapi import HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, EmailStr
 import uuid
+import json
 
 from app.config import settings
 from app.database import get_pool
@@ -18,11 +19,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 # ==================
 
 class UserBackground(BaseModel):
-    programming_experience: str = "none"  # none/beginner/intermediate/advanced
-    robotics_experience: str = "none"     # none/hobbyist/student/professional
-    hardware_access: str = "none"         # none/basic/jetson/full_lab
-    learning_goal: str = "overview"       # overview/deep_dive/project_based
-    preferred_language: str = "english"   # english/urdu/both
+    programming_experience: str = "none"
+    robotics_experience: str = "none"
+    hardware_access: str = "none"
+    learning_goal: str = "overview"
+    preferred_language: str = "english"
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -51,10 +52,7 @@ def hash_password(password: str) -> str:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
@@ -80,7 +78,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         )
         if not user:
             raise credentials_exception
-        return dict(user)
+        result = dict(user)
+        if isinstance(result.get("background"), str):
+            result["background"] = json.loads(result["background"])
+        return result
 
 # ==================
 # Auth Routes
@@ -94,63 +95,40 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def register(user_data: UserCreate):
     pool = await get_pool()
     async with pool.acquire() as conn:
-        # Check if user already exists
-        existing = await conn.fetchrow(
-            "SELECT id FROM users WHERE email = $1", user_data.email
-        )
+        existing = await conn.fetchrow("SELECT id FROM users WHERE email = $1", user_data.email)
         if existing:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
-        # Create new user
         hashed_pw = hash_password(user_data.password)
+        background_json = json.dumps(user_data.background.model_dump())
         user_id = await conn.fetchval(
             """INSERT INTO users (email, name, hashed_password, background)
-               VALUES ($1, $2, $3, $4) RETURNING id""",
-            user_data.email,
-            user_data.name,
-            hashed_pw,
-            user_data.background.model_dump()
+               VALUES ($1, $2, $3, $4::jsonb) RETURNING id""",
+            user_data.email, user_data.name, hashed_pw, background_json
         )
 
-        # Generate token
         access_token = create_access_token({"sub": str(user_id)})
-
         return TokenResponse(
             access_token=access_token,
-            user={
-                "id": str(user_id),
-                "email": user_data.email,
-                "name": user_data.name,
-                "background": user_data.background.model_dump()
-            }
+            user={"id": str(user_id), "email": user_data.email, "name": user_data.name,
+                  "background": user_data.background.model_dump()}
         )
 
 @auth_router.post("/login", response_model=TokenResponse)
 async def login(credentials: UserLogin):
     pool = await get_pool()
     async with pool.acquire() as conn:
-        user = await conn.fetchrow(
-            "SELECT * FROM users WHERE email = $1", credentials.email
-        )
+        user = await conn.fetchrow("SELECT * FROM users WHERE email = $1", credentials.email)
         if not user or not verify_password(credentials.password, user["hashed_password"]):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password"
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
 
         access_token = create_access_token({"sub": str(user["id"])})
-
+        background = user["background"]
+        if isinstance(background, str):
+            background = json.loads(background)
         return TokenResponse(
             access_token=access_token,
-            user={
-                "id": str(user["id"]),
-                "email": user["email"],
-                "name": user["name"],
-                "background": user["background"]
-            }
+            user={"id": str(user["id"]), "email": user["email"], "name": user["name"], "background": background}
         )
 
 @auth_router.get("/me")
@@ -158,15 +136,12 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     return current_user
 
 @auth_router.put("/background")
-async def update_background(
-    background: UserBackground,
-    current_user: dict = Depends(get_current_user)
-):
+async def update_background(background: UserBackground, current_user: dict = Depends(get_current_user)):
     pool = await get_pool()
     async with pool.acquire() as conn:
+        import json
         await conn.execute(
-            "UPDATE users SET background = $1, updated_at = NOW() WHERE id = $2",
-            background.model_dump(),
-            current_user["id"]
+            "UPDATE users SET background = $1::jsonb, updated_at = NOW() WHERE id = $2",
+            json.dumps(background.model_dump()), current_user["id"]
         )
     return {"message": "Background updated successfully"}
