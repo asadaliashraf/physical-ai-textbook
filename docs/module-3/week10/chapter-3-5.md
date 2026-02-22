@@ -1,3 +1,8 @@
+---
+sidebar_position: 1
+title: Chapter 3.5 - Perception Systems
+---
+
 # Chapter 3.5: Perception Systems
 
 ## Learning Objectives
