@@ -1,11 +1,12 @@
-"""RAG Retrieval and Generation using Gemini"""
-import google.generativeai as genai
+"""RAG Retrieval and Generation using Gemini REST API"""
+import httpx
+import json
 from app.config import settings
 from app.rag.embeddings import get_query_embedding
 from app.rag.vector_store import search
 from typing import Optional, AsyncIterator
 
-genai.configure(api_key=settings.GEMINI_API_KEY)
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent"
 
 SYSTEM_PROMPT = """You are an intelligent AI tutor for a Physical AI & Humanoid Robotics textbook.
 Your role is to help students understand complex robotics concepts clearly and accurately.
@@ -16,7 +17,6 @@ Guidelines:
 - Provide practical examples when explaining concepts
 - If asked about code, explain what it does step by step
 - If the answer is not in the provided context, say so honestly
-- For Pakistani students, you can relate concepts to local examples when helpful
 
 Always be encouraging and supportive in your teaching style."""
 
@@ -29,22 +29,21 @@ async def generate_rag_response(
     language: str = "english"
 ) -> AsyncIterator[str]:
     """Generate a streaming RAG response"""
-
-    # Build the actual query (include selected text if provided)
     if selected_text:
         full_query = f"Regarding this text: '{selected_text[:500]}'\n\nQuestion: {query}"
     else:
         full_query = query
 
     # Get relevant context from Qdrant
-    query_embedding = await get_query_embedding(full_query)
-    relevant_docs = await search(query_embedding, limit=5, chapter_id=chapter_id)
+    try:
+        query_embedding = await get_query_embedding(full_query)
+        relevant_docs = await search(query_embedding, limit=5, chapter_id=chapter_id)
+        if not relevant_docs:
+            relevant_docs = await search(query_embedding, limit=5)
+    except Exception:
+        relevant_docs = []
 
-    if not relevant_docs:
-        # Fallback: search without chapter filter
-        relevant_docs = await search(query_embedding, limit=5)
-
-    # Build context string
+    # Build context
     context = ""
     sources = []
     for i, doc in enumerate(relevant_docs, 1):
@@ -52,26 +51,21 @@ async def generate_rag_response(
         if doc['chapter_id'] not in sources:
             sources.append(doc['chapter_id'])
 
-    # Personalize based on user background
+    # Personalization
     background_note = ""
     if user_background:
         exp = user_background.get("programming_experience", "beginner")
-        goal = user_background.get("learning_goal", "overview")
-        if exp == "none" or exp == "beginner":
-            background_note = "\nNote: Explain at a beginner level with simple analogies."
+        if exp in ("none", "beginner"):
+            background_note = "\nExplain at a beginner level with simple analogies."
         elif exp == "advanced":
-            background_note = "\nNote: You can use technical terminology and advanced concepts."
-        if goal == "project_based":
-            background_note += " Focus on practical implementation."
+            background_note = "\nUse technical terminology and advanced concepts."
 
-    # Language instruction
     lang_instruction = ""
     if language == "urdu":
         lang_instruction = "\n\nIMPORTANT: Respond in Urdu (اردو) language."
     elif language == "both":
         lang_instruction = "\n\nProvide the response in both English and Urdu."
 
-    # Build the final prompt
     prompt = f"""{SYSTEM_PROMPT}
 {background_note}
 {lang_instruction}
@@ -83,28 +77,42 @@ Student's question: {full_query}
 
 Please provide a clear, helpful answer based on the context above:"""
 
-    # Generate streaming response with Gemini
-    model = genai.GenerativeModel(
-        "gemini-1.5-flash",
-        generation_config={"temperature": 0.7, "max_output_tokens": 1024}
-    )
-
-    # Add conversation history if provided
-    history = []
+    # Build contents array (with optional history)
+    contents = []
     if conversation_history:
-        for msg in conversation_history[-6:]:  # Last 3 exchanges
-            history.append({
-                "role": msg["role"],
-                "parts": [msg["content"]]
-            })
+        for msg in conversation_history[-6:]:
+            role = "user" if msg["role"] == "user" else "model"
+            contents.append({"role": role, "parts": [{"text": msg["content"]}]})
+    contents.append({"role": "user", "parts": [{"text": prompt}]})
 
-    chat = model.start_chat(history=history)
-    response = chat.send_message(prompt, stream=True)
+    body = {
+        "contents": contents,
+        "generationConfig": {"temperature": 0.7, "maxOutputTokens": 1024}
+    }
 
-    for chunk in response:
-        if chunk.text:
-            yield chunk.text
+    # Stream response from Gemini
+    async with httpx.AsyncClient(timeout=60) as client:
+        async with client.stream(
+            "POST",
+            f"{GEMINI_URL}?key={settings.GEMINI_API_KEY}&alt=sse",
+            json=body
+        ) as resp:
+            async for line in resp.aiter_lines():
+                if line.startswith("data: "):
+                    data_str = line[6:]
+                    if data_str == "[DONE]":
+                        break
+                    try:
+                        data = json.loads(data_str)
+                        candidates = data.get("candidates", [])
+                        for candidate in candidates:
+                            parts = candidate.get("content", {}).get("parts", [])
+                            for part in parts:
+                                text = part.get("text", "")
+                                if text:
+                                    yield text
+                    except json.JSONDecodeError:
+                        continue
 
-    # Yield sources at the end
     if sources:
-        yield f"\n\n---\n📚 **Sources**: {', '.join(sources)}"
+        yield f"\n\n---\n**Sources**: {', '.join(sources)}"
