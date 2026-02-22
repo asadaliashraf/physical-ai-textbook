@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styles from './AuthModal.module.css';
 
 const API_BASE = process.env.NODE_ENV === 'production'
-  ? 'https://physical-ai-backend.vercel.app'
+  ? 'https://physical-ai-backend-mocha.vercel.app'
   : 'http://localhost:8000';
 
 interface AuthModalProps {

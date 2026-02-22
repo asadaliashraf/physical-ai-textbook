@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import styles from './ChatWidget.module.css';
 
 const API_BASE = process.env.NODE_ENV === 'production'
-  ? 'https://physical-ai-backend.vercel.app'
+  ? 'https://physical-ai-backend-mocha.vercel.app'
   : 'http://localhost:8000';
 
 interface Message {
