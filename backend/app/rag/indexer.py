@@ -33,13 +33,11 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVE
     chunks = []
     start = 0
     while start < len(text):
-        end = start + chunk_size
-        if end > len(text):
-            end = len(text)
+        end = min(start + chunk_size, len(text))
         chunks.append(text[start:end])
-        start = end - overlap
-        if start >= len(text):
+        if end >= len(text):
             break
+        start = end - overlap
     return chunks
 
 def get_chapter_info(file_path: str) -> dict:
@@ -109,7 +107,9 @@ async def index_all_docs():
                 all_embeddings.append(embedding)
 
         except Exception as e:
+            import traceback
             print(f"Error indexing {file_path}: {e}")
+            traceback.print_exc()
 
     # Batch upsert to Qdrant
     if all_documents:

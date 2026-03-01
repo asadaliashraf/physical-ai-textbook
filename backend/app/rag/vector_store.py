@@ -14,7 +14,7 @@ def _base():
 
 async def init_collection():
     """Create the collection if it doesn't exist"""
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=60) as client:
         # Check if collection exists
         resp = await client.get(f"{_base()}/collections/{settings.QDRANT_COLLECTION}", headers=_headers())
         if resp.status_code == 200:
@@ -59,7 +59,7 @@ async def search(query_embedding: list[float], limit: int = 5, chapter_id: Optio
     if chapter_id:
         payload["filter"] = {"must": [{"key": "chapter_id", "match": {"value": chapter_id}}]}
 
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
             f"{_base()}/collections/{settings.QDRANT_COLLECTION}/points/search",
             headers=_headers(),
