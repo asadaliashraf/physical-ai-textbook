@@ -7,10 +7,10 @@ from typing import Optional
 EMBEDDING_DIM = 768
 
 def _headers():
-    return {"api-key": settings.QDRANT_API_KEY.strip() if settings.QDRANT_API_KEY else "", "Content-Type": "application/json"}
+    return {"api-key": settings.QDRANT_API_KEY or "", "Content-Type": "application/json"}
 
 def _base():
-    return settings.QDRANT_URL.strip().rstrip("/")
+    return settings.QDRANT_URL.rstrip("/")
 
 async def init_collection():
     """Create the collection if it doesn't exist"""

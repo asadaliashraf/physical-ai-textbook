@@ -7,7 +7,7 @@ GEMINI_EMBED_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemi
 async def get_embedding(text: str, task_type: str = "RETRIEVAL_DOCUMENT") -> list[float]:
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(
-            f"{GEMINI_EMBED_URL}?key={settings.GEMINI_API_KEY.strip()}",
+            f"{GEMINI_EMBED_URL}?key={settings.GEMINI_API_KEY}",
             json={
                 "model": "models/gemini-embedding-001",
                 "content": {"parts": [{"text": text}]},

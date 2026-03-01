@@ -4,7 +4,7 @@ import re
 from app.config import settings
 from app.database import get_pool
 
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
 TRANSLATION_PROMPT = """You are an expert technical translator specializing in translating
 robotics and AI educational content from English to Urdu.

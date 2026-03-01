@@ -29,4 +29,14 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
 
-settings = Settings()
+_settings = Settings()
+
+# Strip whitespace from all string env vars (Vercel sometimes adds trailing newlines)
+_settings.GEMINI_API_KEY = _settings.GEMINI_API_KEY.strip()
+_settings.QDRANT_URL = _settings.QDRANT_URL.strip()
+if _settings.QDRANT_API_KEY:
+    _settings.QDRANT_API_KEY = _settings.QDRANT_API_KEY.strip()
+_settings.DATABASE_URL = _settings.DATABASE_URL.strip()
+_settings.SECRET_KEY = _settings.SECRET_KEY.strip()
+
+settings = _settings

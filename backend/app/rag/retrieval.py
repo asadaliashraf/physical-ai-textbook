@@ -6,7 +6,7 @@ from app.rag.embeddings import get_query_embedding
 from app.rag.vector_store import search
 from typing import Optional, AsyncIterator
 
-GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent"
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent"
 
 SYSTEM_PROMPT = """You are an intelligent AI tutor for a Physical AI & Humanoid Robotics textbook.
 Your role is to help students understand complex robotics concepts clearly and accurately.
