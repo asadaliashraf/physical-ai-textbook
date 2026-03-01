@@ -2,7 +2,7 @@
 import httpx
 from app.config import settings
 
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
 PERSONALIZATION_PROMPTS = {
     "beginner": "You are personalizing robotics content for a BEGINNER. Use simple language and everyday analogies. Explain every technical term. Add 'Think of it like...' examples.",
