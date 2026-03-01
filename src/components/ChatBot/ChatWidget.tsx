@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import styles from './ChatWidget.module.css';
 
 const API_BASE = process.env.NODE_ENV === 'production'
@@ -15,12 +15,16 @@ interface ChatWidgetProps {
   chapterId?: string;
 }
 
-export default function ChatWidget({ chapterId }: ChatWidgetProps) {
+export interface ChatWidgetHandle {
+  openWithQuery: (query: string, selectedText: string) => void;
+}
+
+const ChatWidget = forwardRef<ChatWidgetHandle, ChatWidgetProps>(({ chapterId }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: '👋 Hello! I\'m your AI tutor for this Physical AI & Humanoid Robotics textbook. Ask me anything about the content, or select text and ask me to explain it!',
+      content: '👋 Hello! I\'m your AI tutor for this Physical AI & Humanoid Robotics textbook. Ask me anything about the content, or select text and click "Explain This"!',
       timestamp: new Date(),
     }
   ]);
@@ -29,38 +33,45 @@ export default function ChatWidget({ chapterId }: ChatWidgetProps) {
   const [selectedText, setSelectedText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const pendingSendRef = useRef(false);
+
+  // Expose openWithQuery to parent via ref
+  useImperativeHandle(ref, () => ({
+    openWithQuery: (query: string, sel: string) => {
+      setSelectedText(sel);
+      setInput(query);
+      setIsOpen(true);
+      pendingSendRef.current = true;
+    },
+  }));
+
+  // Auto-send when opened via Explain button
+  useEffect(() => {
+    if (pendingSendRef.current && isOpen && input && selectedText) {
+      pendingSendRef.current = false;
+      const q = input;
+      const s = selectedText;
+      setTimeout(() => {
+        doSend(q, s);
+      }, 300);
+    }
+  }, [isOpen, input, selectedText]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Listen for text selection
-  useEffect(() => {
-    const handleSelection = () => {
-      const selection = window.getSelection();
-      const text = selection?.toString().trim();
-      if (text && text.length > 20) {
-        setSelectedText(text);
-      }
-    };
+  const doSend = async (queryText: string, selText: string) => {
+    if (!queryText.trim() || isLoading) return;
 
-    document.addEventListener('mouseup', handleSelection);
-    document.addEventListener('touchend', handleSelection);
-    return () => {
-      document.removeEventListener('mouseup', handleSelection);
-      document.removeEventListener('touchend', handleSelection);
-    };
-  }, []);
-
-  const sendMessage = useCallback(async () => {
-    if (!input.trim() || isLoading) return;
+    const displayContent = selText
+      ? `About this text: "${selText.substring(0, 100)}..."\n\n${queryText}`
+      : queryText;
 
     const userMessage: Message = {
       role: 'user',
-      content: selectedText
-        ? `About this text: "${selectedText.substring(0, 100)}..."\n\n${input}`
-        : input,
+      content: displayContent,
       timestamp: new Date(),
     };
 
@@ -69,7 +80,6 @@ export default function ChatWidget({ chapterId }: ChatWidgetProps) {
     setSelectedText('');
     setIsLoading(true);
 
-    // Add placeholder for streaming response
     const assistantMessage: Message = {
       role: 'assistant',
       content: '',
@@ -88,9 +98,9 @@ export default function ChatWidget({ chapterId }: ChatWidgetProps) {
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          query: input,
+          query: queryText,
           chapter_id: chapterId,
-          selected_text: selectedText || undefined,
+          selected_text: selText || undefined,
           conversation_history: messages.slice(-6).map(m => ({
             role: m.role,
             content: m.content,
@@ -100,7 +110,6 @@ export default function ChatWidget({ chapterId }: ChatWidgetProps) {
 
       if (!response.ok) throw new Error('API request failed');
 
-      // Stream the response
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let fullContent = '';
@@ -141,13 +150,17 @@ export default function ChatWidget({ chapterId }: ChatWidgetProps) {
         const newMessages = [...prev];
         newMessages[newMessages.length - 1] = {
           ...newMessages[newMessages.length - 1],
-          content: '⚠️ Sorry, I encountered an error. Please make sure the backend is running and try again.',
+          content: '⚠️ Sorry, I encountered an error. Please try again.',
         };
         return newMessages;
       });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const sendMessage = useCallback(() => {
+    doSend(input, selectedText);
   }, [input, selectedText, chapterId, messages, isLoading]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -251,10 +264,13 @@ export default function ChatWidget({ chapterId }: ChatWidgetProps) {
           </div>
 
           <div className={styles.chatFooter}>
-            💡 Tip: Select text in the book to ask about it specifically
+            💡 Select text in the book, then click "Explain This"
           </div>
         </div>
       )}
     </>
   );
-}
+});
+
+ChatWidget.displayName = 'ChatWidget';
+export default ChatWidget;

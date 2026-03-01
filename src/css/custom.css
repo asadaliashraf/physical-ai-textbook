@@ -111,6 +111,16 @@ h1 {
   background-clip: text;
 }
 
+/* Hero title should be white, not gradient */
+.hero .hero__title {
+  color: white !important;
+  background: none !important;
+  -webkit-text-fill-color: white !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 h2 {
   font-size: 2rem;
   border-bottom: 3px solid var(--ifm-color-primary);

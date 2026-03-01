@@ -18,17 +18,7 @@ const config: Config = {
 
   i18n: {
     defaultLocale: 'en',
-    locales: ['en', 'ur'],
-    localeConfigs: {
-      en: {
-        label: 'English',
-        direction: 'ltr',
-      },
-      ur: {
-        label: 'اردو',
-        direction: 'rtl',
-      },
-    },
+    locales: ['en'],
   },
 
   presets: [
@@ -65,11 +55,7 @@ const config: Config = {
           label: 'Textbook',
         },
         {
-          type: 'localeDropdown',
-          position: 'right',
-        },
-        {
-          href: 'https://github.com/your-username/physical-ai-textbook',
+          href: 'https://github.com/asadaliashraf/physical-ai-textbook',
           label: 'GitHub',
           position: 'right',
         },
@@ -117,7 +103,7 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/your-username/physical-ai-textbook',
+              href: 'https://github.com/asadaliashraf/physical-ai-textbook',
             },
           ],
         },

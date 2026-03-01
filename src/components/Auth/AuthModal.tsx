@@ -83,6 +83,7 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
 
       localStorage.setItem('auth_token', data.access_token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      window.dispatchEvent(new Event('auth-changed'));
       onSuccess(data.user);
       onClose();
 
